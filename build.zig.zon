@@ -1,0 +1,13 @@
+.{
+    .name = .zsdl,
+    .version = "0.0.1",
+    .dependencies = .{
+        .sdl = .{
+            .url = "git+https://github.com/libsdl-org/SDL/#0a54fdb8624f47eae1c796e3cddf475481d948fd",
+            .hash = "N-V-__8AAFbECAOcwzstwbhemyhDct3wzMNQnT34eN1fO8eY",
+        },
+    },
+    .minimum_zig_version = "0.16.0",
+    .paths = .{""},
+    .fingerprint = 0x36e4ca3d65256e9d,
+}
