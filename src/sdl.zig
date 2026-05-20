@@ -536,8 +536,8 @@ pub inline fn size_add_check_overflow(arg_a: usize, arg_b: usize, arg_ret: [*c]u
     }
     ret.* = a +% b;
     return true_val != 0;
-} // include/SDL3/SDL_stdinc.h:6145:13: warning: TODO implement function '__builtin_add_overflow' in std.zig.c_builtins
-// include/SDL3/SDL_stdinc.h:6143:23: warning: unable to translate function, demoted to extern
+} // include/SDL3/SDL_stdinc.h:6156:13: warning: TODO implement function '__builtin_add_overflow' in std.zig.c_builtins
+// include/SDL3/SDL_stdinc.h:6154:23: warning: unable to translate function, demoted to extern
 extern fn SDL_size_add_check_overflow_builtin(arg_a: usize, arg_b: usize, arg_ret: [*c]usize) bool;
 pub const FunctionPointer = ?*const fn () callconv(.c) void;
 pub const AsyncIO = opaque {};
@@ -1335,6 +1335,8 @@ extern fn SDL_LoadPNG_IO(src: ?*IOStream, closeio: bool) [*c]Surface;
 extern fn SDL_LoadPNG(file: [*c]const u8) [*c]Surface;
 extern fn SDL_SavePNG_IO(surface: [*c]Surface, dst: ?*IOStream, closeio: bool) bool;
 extern fn SDL_SavePNG(surface: [*c]Surface, file: [*c]const u8) bool;
+extern fn SDL_LoadJPG_IO(src: ?*IOStream, closeio: bool) [*c]Surface;
+extern fn SDL_LoadJPG(file: [*c]const u8) [*c]Surface;
 extern fn SDL_SetSurfaceRLE(surface: [*c]Surface, enabled: bool) bool;
 extern fn SDL_SurfaceHasRLE(surface: [*c]Surface) bool;
 extern fn SDL_SetSurfaceColorKey(surface: [*c]Surface, enabled: bool, key: Uint32) bool;
@@ -1418,7 +1420,7 @@ extern fn SDL_GetPrimarySelectionText() [*c]u8;
 extern fn SDL_HasPrimarySelectionText() bool;
 pub const ClipboardDataCallback = ?*const fn (userdata: ?*anyopaque, mime_type: [*c]const u8, size: [*c]usize) callconv(.c) ?*const anyopaque;
 pub const ClipboardCleanupCallback = ?*const fn (userdata: ?*anyopaque) callconv(.c) void;
-extern fn SDL_SetClipboardData(callback: ClipboardDataCallback, cleanup: ClipboardCleanupCallback, userdata: ?*anyopaque, mime_types: [*c][*c]const u8, num_mime_types: usize) bool;
+extern fn SDL_SetClipboardData(callback: ClipboardDataCallback, cleanup: ClipboardCleanupCallback, userdata: ?*anyopaque, mime_types: [*c]const [*c]const u8, num_mime_types: usize) bool;
 extern fn SDL_ClearClipboardData() bool;
 extern fn SDL_GetClipboardData(mime_type: [*c]const u8, size: [*c]usize) ?*anyopaque;
 extern fn SDL_HasClipboardData(mime_type: [*c]const u8) bool;
@@ -1437,6 +1439,7 @@ extern fn SDL_HasAVX2() bool;
 extern fn SDL_HasAVX512F() bool;
 extern fn SDL_HasARMSIMD() bool;
 extern fn SDL_HasNEON() bool;
+extern fn SDL_HasSVE2() bool;
 extern fn SDL_HasLSX() bool;
 extern fn SDL_HasLASX() bool;
 extern fn SDL_GetSystemRAM() c_int;
@@ -2319,7 +2322,21 @@ pub const SYSTEM_CURSOR_SE_RESIZE: c_int = 16;
 pub const SYSTEM_CURSOR_S_RESIZE: c_int = 17;
 pub const SYSTEM_CURSOR_SW_RESIZE: c_int = 18;
 pub const SYSTEM_CURSOR_W_RESIZE: c_int = 19;
-pub const SYSTEM_CURSOR_COUNT: c_int = 20;
+pub const SYSTEM_CURSOR_CONTEXT_MENU: c_int = 20;
+pub const SYSTEM_CURSOR_HELP: c_int = 21;
+pub const SYSTEM_CURSOR_CELL: c_int = 22;
+pub const SYSTEM_CURSOR_VERTICAL_TEXT: c_int = 23;
+pub const SYSTEM_CURSOR_ALIAS: c_int = 24;
+pub const SYSTEM_CURSOR_COPY: c_int = 25;
+pub const SYSTEM_CURSOR_NO_DROP: c_int = 26;
+pub const SYSTEM_CURSOR_GRAB: c_int = 27;
+pub const SYSTEM_CURSOR_GRABBING: c_int = 28;
+pub const SYSTEM_CURSOR_COL_RESIZE: c_int = 29;
+pub const SYSTEM_CURSOR_ROW_RESIZE: c_int = 30;
+pub const SYSTEM_CURSOR_ALL_SCROLL: c_int = 31;
+pub const SYSTEM_CURSOR_ZOOM_IN: c_int = 32;
+pub const SYSTEM_CURSOR_ZOOM_OUT: c_int = 33;
+pub const SYSTEM_CURSOR_COUNT: c_int = 34;
 pub const enum_SDL_SystemCursor = c_uint;
 pub const SystemCursor = enum_SDL_SystemCursor;
 pub const MOUSEWHEEL_NORMAL: c_int = 0;
@@ -2438,8 +2455,9 @@ pub const EVENT_WINDOW_ENTER_FULLSCREEN: c_int = 535;
 pub const EVENT_WINDOW_LEAVE_FULLSCREEN: c_int = 536;
 pub const EVENT_WINDOW_DESTROYED: c_int = 537;
 pub const EVENT_WINDOW_HDR_STATE_CHANGED: c_int = 538;
+pub const EVENT_WINDOW_CURVATURE_CHANGED: c_int = 539;
 pub const EVENT_WINDOW_FIRST: c_int = 514;
-pub const EVENT_WINDOW_LAST: c_int = 538;
+pub const EVENT_WINDOW_LAST: c_int = 539;
 pub const EVENT_KEY_DOWN: c_int = 768;
 pub const EVENT_KEY_UP: c_int = 769;
 pub const EVENT_TEXT_EDITING: c_int = 770;
@@ -4930,6 +4948,26 @@ pub const WCHAR_MIN = __WCHAR_MIN;
 pub const WCHAR_MAX = __WCHAR_MAX;
 pub const WEOF = __helpers.promoteIntLiteral(c_uint, 0xffffffff, .hex);
 pub const __attr_dealloc_fclose = "";
+pub const RESTRICT = @compileError("unable to translate C expr: unexpected token 'restrict'"); // include/SDL3/SDL_begin_code.h:347:13
+pub inline fn HAS_BUILTIN(x: anytype) @TypeOf(__builtin.has_builtin(x)) {
+    _ = &x;
+    return __builtin.has_builtin(x);
+}
+pub const HAS_EXTENSION = @compileError("unable to translate macro: undefined identifier `__has_extension`"); // include/SDL3/SDL_begin_code.h:365:9
+pub const DEPRECATED = @compileError("unable to translate macro: undefined identifier `deprecated`"); // include/SDL3/SDL_begin_code.h:373:13
+pub const UNUSED = @compileError("unable to translate macro: undefined identifier `unused`"); // include/SDL3/SDL_begin_code.h:383:13
+pub const DECLSPEC = @compileError("unable to translate macro: undefined identifier `visibility`"); // include/SDL3/SDL_begin_code.h:399:12
+pub const SDLCALL = "";
+pub const INLINE = @compileError("unable to translate C expr: unexpected token '__inline__'"); // include/SDL3/SDL_begin_code.h:440:9
+pub const FORCE_INLINE = @compileError("unable to translate macro: undefined identifier `always_inline`"); // include/SDL3/SDL_begin_code.h:461:9
+pub const NORETURN = @compileError("unable to translate macro: undefined identifier `noreturn`"); // include/SDL3/SDL_begin_code.h:469:9
+pub const ANALYZER_NORETURN = "";
+pub const FALLTHROUGH = @compileError("unable to translate macro: undefined identifier `__fallthrough__`"); // include/SDL3/SDL_begin_code.h:511:9
+pub const NODISCARD = @compileError("unable to translate macro: undefined identifier `warn_unused_result`"); // include/SDL3/SDL_begin_code.h:524:9
+pub const MALLOC = @compileError("unable to translate macro: undefined identifier `malloc`"); // include/SDL3/SDL_begin_code.h:534:9
+pub const ALLOC_SIZE = @compileError("unable to translate macro: undefined identifier `alloc_size`"); // include/SDL3/SDL_begin_code.h:546:9
+pub const ALLOC_SIZE2 = @compileError("unable to translate macro: undefined identifier `alloc_size`"); // include/SDL3/SDL_begin_code.h:556:9
+pub const ALIGNED = @compileError("unable to translate macro: undefined identifier `aligned`"); // include/SDL3/SDL_begin_code.h:566:9
 pub const __CLANG_STDINT_H = "";
 pub const _STDINT_H = @as(c_int, 1);
 pub const _BITS_TYPES_H = @as(c_int, 1);
@@ -5234,13 +5272,13 @@ pub const INCLUDE_STDBOOL_H = "";
 pub const true_val = @as(c_int, 1);
 pub const false_val = @as(c_int, 0);
 pub const __bool_true_false_are_defined = @as(c_int, 1);
-pub const alloca = @compileError("unable to translate macro: undefined identifier `__builtin_alloca`"); // include/SDL3/SDL_stdinc.h:117:12
-pub const COMPILE_TIME_ASSERT = @compileError("unable to translate C expr: unexpected token '_Static_assert'"); // include/SDL3/SDL_stdinc.h:230:9
+pub const alloca = @compileError("unable to translate macro: undefined identifier `__builtin_alloca`"); // include/SDL3/SDL_stdinc.h:119:12
+pub const COMPILE_TIME_ASSERT = @compileError("unable to translate C expr: unexpected token '_Static_assert'"); // include/SDL3/SDL_stdinc.h:232:9
 pub inline fn arraysize(array: anytype) @TypeOf(__helpers.div(__helpers.sizeof(array), __helpers.sizeof(array[@as(usize, @intCast(@as(c_int, 0)))]))) {
     _ = &array;
     return __helpers.div(__helpers.sizeof(array), __helpers.sizeof(array[@as(usize, @intCast(@as(c_int, 0)))]));
 }
-pub const STRINGIFY_ARG = @compileError("unable to translate C expr: unexpected token ''"); // include/SDL3/SDL_stdinc.h:261:9
+pub const STRINGIFY_ARG = @compileError("unable to translate C expr: unexpected token ''"); // include/SDL3/SDL_stdinc.h:273:9
 pub const reinterpret_cast = __helpers.CAST_OR_CALL;
 pub const static_cast = __helpers.CAST_OR_CALL;
 pub const const_cast = __helpers.CAST_OR_CALL;
@@ -5307,10 +5345,10 @@ pub inline fn OUT_Z_BYTECAP(x: anytype) void {
 }
 pub const PRINTF_FORMAT_STRING = "";
 pub const SCANF_FORMAT_STRING = "";
-pub const PRINTF_VARARG_FUNC = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1151:9
-pub const PRINTF_VARARG_FUNCV = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1152:9
-pub const SCANF_VARARG_FUNC = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1153:9
-pub const SCANF_VARARG_FUNCV = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1154:9
+pub const PRINTF_VARARG_FUNC = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1163:9
+pub const PRINTF_VARARG_FUNCV = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1164:9
+pub const SCANF_VARARG_FUNC = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1165:9
+pub const SCANF_VARARG_FUNCV = @compileError("unable to translate macro: undefined identifier `format`"); // include/SDL3/SDL_stdinc.h:1166:9
 pub inline fn WPRINTF_VARARG_FUNC(fmtargnumber: anytype) void {
     _ = &fmtargnumber;
     return;
@@ -5319,26 +5357,7 @@ pub inline fn WPRINTF_VARARG_FUNCV(fmtargnumber: anytype) void {
     _ = &fmtargnumber;
     return;
 }
-pub const RESTRICT = @compileError("unable to translate C expr: unexpected token 'restrict'"); // include/SDL3/SDL_begin_code.h:331:13
-pub inline fn HAS_BUILTIN(x: anytype) @TypeOf(__builtin.has_builtin(x)) {
-    _ = &x;
-    return __builtin.has_builtin(x);
-}
-pub const DEPRECATED = @compileError("unable to translate macro: undefined identifier `deprecated`"); // include/SDL3/SDL_begin_code.h:349:13
-pub const UNUSED = @compileError("unable to translate macro: undefined identifier `unused`"); // include/SDL3/SDL_begin_code.h:359:13
-pub const DECLSPEC = @compileError("unable to translate macro: undefined identifier `visibility`"); // include/SDL3/SDL_begin_code.h:375:12
-pub const SDLCALL = "";
-pub const INLINE = @compileError("unable to translate C expr: unexpected token '__inline__'"); // include/SDL3/SDL_begin_code.h:416:9
-pub const FORCE_INLINE = @compileError("unable to translate macro: undefined identifier `always_inline`"); // include/SDL3/SDL_begin_code.h:437:9
-pub const NORETURN = @compileError("unable to translate macro: undefined identifier `noreturn`"); // include/SDL3/SDL_begin_code.h:445:9
-pub const ANALYZER_NORETURN = "";
-pub const FALLTHROUGH = @compileError("unable to translate macro: undefined identifier `__fallthrough__`"); // include/SDL3/SDL_begin_code.h:487:9
-pub const NODISCARD = @compileError("unable to translate macro: undefined identifier `warn_unused_result`"); // include/SDL3/SDL_begin_code.h:500:9
-pub const MALLOC = @compileError("unable to translate macro: undefined identifier `malloc`"); // include/SDL3/SDL_begin_code.h:510:9
-pub const ALLOC_SIZE = @compileError("unable to translate macro: undefined identifier `alloc_size`"); // include/SDL3/SDL_begin_code.h:522:9
-pub const ALLOC_SIZE2 = @compileError("unable to translate macro: undefined identifier `alloc_size`"); // include/SDL3/SDL_begin_code.h:532:9
-pub const ALIGNED = @compileError("unable to translate macro: undefined identifier `aligned`"); // include/SDL3/SDL_begin_code.h:542:9
-pub const INIT_INTERFACE = @compileError("unable to translate C expr: unexpected token 'do'"); // include/SDL3/SDL_stdinc.h:1256:9
+pub const INIT_INTERFACE = @compileError("unable to translate C expr: unexpected token 'do'"); // include/SDL3/SDL_stdinc.h:1267:9
 pub inline fn stack_alloc(@"type": anytype, count: anytype) @TypeOf([*c]@"type" ++ alloca(__helpers.sizeof(@"type") * count)) {
     _ = &@"type";
     _ = &count;
@@ -5364,7 +5383,7 @@ pub inline fn clamp(x: anytype, a: anytype, b: anytype) @TypeOf(if (__helpers.ca
     _ = &b;
     return if (__helpers.cast(bool, x < a)) a else if (__helpers.cast(bool, x > b)) b else x;
 }
-pub const copyp = @compileError("unable to translate C expr: unexpected token '{'"); // include/SDL3/SDL_stdinc.h:2539:9
+pub const copyp = @compileError("unable to translate C expr: unexpected token '{'"); // include/SDL3/SDL_stdinc.h:2550:9
 pub inline fn zero(x: anytype) @TypeOf(SDL_memset(&x, @as(c_int, 0), __helpers.sizeof(x))) {
     _ = &x;
     return SDL_memset(&x, @as(c_int, 0), __helpers.sizeof(x));
@@ -5396,15 +5415,11 @@ pub inline fn iconv_utf8_ucs4(S: anytype) @TypeOf(reinterpret_cast([*c]Uint32, S
     _ = &S;
     return reinterpret_cast([*c]Uint32, SDL_iconv_string("UCS-4", "UTF-8", S, SDL_strlen(S) + @as(c_int, 1)));
 }
-pub const iconv_wchar_utf8 = @compileError("unable to translate C expr: unexpected token 'const'"); // include/SDL3/SDL_stdinc.h:5993:9
-pub const CompilerBarrier = @compileError("unable to translate C expr: unexpected token '__asm__'"); // include/SDL3/SDL_atomic.h:165:9
-pub inline fn MemoryBarrierRelease() @TypeOf(CompilerBarrier()) {
-    return CompilerBarrier();
-}
-pub inline fn MemoryBarrierAcquire() @TypeOf(CompilerBarrier()) {
-    return CompilerBarrier();
-}
-pub const CPUPauseInstruction = @compileError("unable to translate C expr: unexpected token '__asm__'"); // include/SDL3/SDL_atomic.h:349:13
+pub const iconv_wchar_utf8 = @compileError("unable to translate C expr: unexpected token 'const'"); // include/SDL3/SDL_stdinc.h:6004:9
+pub const CompilerBarrier = @compileError("unable to translate macro: undefined identifier `__atomic_signal_fence`"); // include/SDL3/SDL_atomic.h:160:9
+pub const MemoryBarrierRelease = @compileError("unable to translate macro: undefined identifier `__atomic_thread_fence`"); // include/SDL3/SDL_atomic.h:282:9
+pub const MemoryBarrierAcquire = @compileError("unable to translate macro: undefined identifier `__atomic_thread_fence`"); // include/SDL3/SDL_atomic.h:283:9
+pub const CPUPauseInstruction = @compileError("unable to translate C expr: unexpected token '__asm__'"); // include/SDL3/SDL_atomic.h:359:13
 pub inline fn AtomicIncRef(a: anytype) @TypeOf(SDL_AddAtomicInt(a, @as(c_int, 1))) {
     _ = &a;
     return SDL_AddAtomicInt(a, @as(c_int, 1));
@@ -5896,6 +5911,7 @@ pub const PROP_WINDOW_CREATE_WIN32_PIXEL_FORMAT_HWND_POINTER = "SDL.window.creat
 pub const PROP_WINDOW_CREATE_X11_WINDOW_NUMBER = "SDL.window.create.x11.window";
 pub const PROP_WINDOW_CREATE_EMSCRIPTEN_CANVAS_ID_STRING = "SDL.window.create.emscripten.canvas_id";
 pub const PROP_WINDOW_CREATE_EMSCRIPTEN_KEYBOARD_ELEMENT_STRING = "SDL.window.create.emscripten.keyboard_element";
+pub const PROP_WINDOW_CREATE_CURVATURE_FLOAT = "SDL.window.create.curvature";
 pub const PROP_WINDOW_SHAPE_POINTER = "SDL.window.shape";
 pub const PROP_WINDOW_HDR_ENABLED_BOOLEAN = "SDL.window.HDR_enabled";
 pub const PROP_WINDOW_SDR_WHITE_LEVEL_FLOAT = "SDL.window.SDR_white_level";
@@ -5935,6 +5951,7 @@ pub const PROP_WINDOW_X11_SCREEN_NUMBER = "SDL.window.x11.screen";
 pub const PROP_WINDOW_X11_WINDOW_NUMBER = "SDL.window.x11.window";
 pub const PROP_WINDOW_EMSCRIPTEN_CANVAS_ID_STRING = "SDL.window.emscripten.canvas_id";
 pub const PROP_WINDOW_EMSCRIPTEN_KEYBOARD_ELEMENT_STRING = "SDL.window.emscripten.keyboard_element";
+pub const PROP_WINDOW_CURVATURE_FLOAT = "SDL.window.curvature";
 pub const WINDOW_SURFACE_VSYNC_DISABLED = @as(c_int, 0);
 pub const WINDOW_SURFACE_VSYNC_ADAPTIVE = -@as(c_int, 1);
 pub const PROP_FILE_DIALOG_FILTERS_POINTER = "SDL.filedialog.filters";
@@ -6481,6 +6498,7 @@ pub const HINT_ANDROID_ALLOW_RECREATE_ACTIVITY = "SDL_ANDROID_ALLOW_RECREATE_ACT
 pub const HINT_ANDROID_BLOCK_ON_PAUSE = "SDL_ANDROID_BLOCK_ON_PAUSE";
 pub const HINT_ANDROID_LOW_LATENCY_AUDIO = "SDL_ANDROID_LOW_LATENCY_AUDIO";
 pub const HINT_ANDROID_TRAP_BACK_BUTTON = "SDL_ANDROID_TRAP_BACK_BUTTON";
+pub const HINT_ANDROID_ALLOW_PERSISTENT_FOLDER_ACCESS = "SDL_ANDROID_ALLOW_PERSISTENT_FOLDER_ACCESS";
 pub const HINT_APP_ID = "SDL_APP_ID";
 pub const HINT_APP_NAME = "SDL_APP_NAME";
 pub const HINT_APPLE_TV_CONTROLLER_UI_EVENTS = "SDL_APPLE_TV_CONTROLLER_UI_EVENTS";
@@ -6511,6 +6529,7 @@ pub const HINT_CPU_FEATURE_MASK = "SDL_CPU_FEATURE_MASK";
 pub const HINT_JOYSTICK_DIRECTINPUT = "SDL_JOYSTICK_DIRECTINPUT";
 pub const HINT_FILE_DIALOG_DRIVER = "SDL_FILE_DIALOG_DRIVER";
 pub const HINT_DISPLAY_USABLE_BOUNDS = "SDL_DISPLAY_USABLE_BOUNDS";
+pub const HINT_DOS_ALLOW_DIRECT_FRAMEBUFFER = "SDL_DOS_ALLOW_DIRECT_FRAMEBUFFER";
 pub const HINT_INVALID_PARAM_CHECKS = "SDL_INVALID_PARAM_CHECKS";
 pub const HINT_EMSCRIPTEN_ASYNCIFY = "SDL_EMSCRIPTEN_ASYNCIFY";
 pub const HINT_EMSCRIPTEN_CANVAS_SELECTOR = "SDL_EMSCRIPTEN_CANVAS_SELECTOR";
@@ -6699,6 +6718,7 @@ pub const HINT_VIDEO_WAYLAND_MODE_SCALING = "SDL_VIDEO_WAYLAND_MODE_SCALING";
 pub const HINT_VIDEO_WAYLAND_PREFER_LIBDECOR = "SDL_VIDEO_WAYLAND_PREFER_LIBDECOR";
 pub const HINT_VIDEO_WAYLAND_SCALE_TO_DISPLAY = "SDL_VIDEO_WAYLAND_SCALE_TO_DISPLAY";
 pub const HINT_VIDEO_WIN_D3DCOMPILER = "SDL_VIDEO_WIN_D3DCOMPILER";
+pub const HINT_VIDEO_X11_ENABLE_XSYNC_EXT = "SDL_VIDEO_X11_ENABLE_XSYNC_EXT";
 pub const HINT_VIDEO_X11_EXTERNAL_WINDOW_INPUT = "SDL_VIDEO_X11_EXTERNAL_WINDOW_INPUT";
 pub const HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR = "SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR";
 pub const HINT_VIDEO_X11_NET_WM_PING = "SDL_VIDEO_X11_NET_WM_PING";
@@ -7210,6 +7230,7 @@ pub const crc32 = SDL_crc32;
 pub const rand = SDL_rand;
 pub const cosf = SDL_cosf;
 pub const WaitAndAcquireGPUSwapchainTexture = SDL_WaitAndAcquireGPUSwapchainTexture;
+pub const LoadJPG = SDL_LoadJPG;
 pub const strtoull = SDL_strtoull;
 pub const GetCurrentDisplayOrientation = SDL_GetCurrentDisplayOrientation;
 pub const hid_get_report_descriptor = SDL_hid_get_report_descriptor;
@@ -7877,6 +7898,7 @@ pub const RenderFillRect = SDL_RenderFillRect;
 pub const SetWindowMouseGrab = SDL_SetWindowMouseGrab;
 pub const EndGPUComputePass = SDL_EndGPUComputePass;
 pub const CreateCursor = SDL_CreateCursor;
+pub const HasSVE2 = SDL_HasSVE2;
 pub const GetJoystickID = SDL_GetJoystickID;
 pub const GetFullscreenDisplayModes = SDL_GetFullscreenDisplayModes;
 pub const acosf = SDL_acosf;
@@ -7931,6 +7953,7 @@ pub const rand_bits = SDL_rand_bits;
 pub const SetWindowFullscreenMode = SDL_SetWindowFullscreenMode;
 pub const PauseAudioStreamDevice = SDL_PauseAudioStreamDevice;
 pub const CalculateGPUTextureFormatSize = SDL_CalculateGPUTextureFormatSize;
+pub const LoadJPG_IO = SDL_LoadJPG_IO;
 pub const SetPaletteColors = SDL_SetPaletteColors;
 pub const LoadWAV = SDL_LoadWAV;
 pub const abs = SDL_abs;

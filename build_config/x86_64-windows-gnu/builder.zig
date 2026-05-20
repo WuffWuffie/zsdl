@@ -15,7 +15,8 @@ pub fn build(b: *std.Build, sdl_dep: *std.Build.Dependency, mod: *std.Build.Modu
 
     mod.addCSourceFiles(.{
         .root = b.path("build_deps/x86_64-windows-gnu"),
-        .files = &.{},
+        .files = &.{
+        },
     });
 
     mod.addCSourceFiles(.{

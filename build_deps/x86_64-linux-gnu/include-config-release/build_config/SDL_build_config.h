@@ -86,16 +86,16 @@
 #define HAVE_MEMCMP 1
 #define HAVE_WCSLEN 1
 #define HAVE_WCSNLEN 1
-#define HAVE_WCSLCPY 1
-#define HAVE_WCSLCAT 1
+/* #undef HAVE_WCSLCPY */
+/* #undef HAVE_WCSLCAT */
 #define HAVE_WCSSTR 1
 #define HAVE_WCSCMP 1
 #define HAVE_WCSNCMP 1
 #define HAVE_WCSTOL 1
 #define HAVE_STRLEN 1
 #define HAVE_STRNLEN 1
-#define HAVE_STRLCPY 1
-#define HAVE_STRLCAT 1
+/* #undef HAVE_STRLCPY */
+/* #undef HAVE_STRLCAT */
 #define HAVE_STRPBRK 1
 /* #undef HAVE__STRREV */
 #define HAVE_INDEX 1
@@ -215,7 +215,7 @@
 #define HAVE_O_CLOEXEC 1
 
 #define HAVE_LINUX_INPUT_H 1
-#define HAVE_LIBUDEV_H 1
+/* #undef HAVE_LIBUDEV_H */
 #define HAVE_LIBDECOR_H 1
 #define HAVE_LIBURING_H 1
 #define HAVE_FRIBIDI_H 1
@@ -292,7 +292,7 @@
 /* #undef SDL_AUDIO_DRIVER_N3DS */
 /* #undef SDL_AUDIO_DRIVER_NGAGE */
 /* #undef SDL_AUDIO_DRIVER_QNX */
-
+/* #undef SDL_AUDIO_DRIVER_DOS_SOUNDBLASTER */
 /* #undef SDL_AUDIO_DRIVER_PRIVATE */
 
 /* Enable various input drivers */
@@ -303,6 +303,7 @@
 /* #undef SDL_HAVE_MACHINE_JOYSTICK_H */
 /* #undef SDL_JOYSTICK_ANDROID */
 /* #undef SDL_JOYSTICK_DINPUT */
+/* #undef SDL_JOYSTICK_DOS */
 /* #undef SDL_JOYSTICK_DUMMY */
 /* #undef SDL_JOYSTICK_EMSCRIPTEN */
 /* #undef SDL_JOYSTICK_GAMEINPUT */
@@ -332,7 +333,7 @@
 /* #undef SDL_HAPTIC_PRIVATE */
 
 #define SDL_LIBUSB_DYNAMIC "libusb-1.0.so.0"
-#define SDL_UDEV_DYNAMIC "libudev.so.1"
+/* #undef SDL_UDEV_DYNAMIC */
 
 /* Enable various process implementations */
 /* #undef SDL_PROCESS_DUMMY */
@@ -370,6 +371,7 @@
 /* #undef SDL_THREAD_PSP */
 /* #undef SDL_THREAD_PS2 */
 /* #undef SDL_THREAD_N3DS */
+/* #undef SDL_THREAD_DOS */
 
 /* #undef SDL_THREAD_PRIVATE */
 
@@ -392,6 +394,7 @@
 /* #undef SDL_TIMER_PSP */
 /* #undef SDL_TIMER_PS2 */
 /* #undef SDL_TIMER_N3DS */
+/* #undef SDL_TIMER_DOS */
 
 /* #undef SDL_TIMER_PRIVATE */
 
@@ -448,6 +451,7 @@
 #define SDL_VIDEO_DRIVER_X11_XSYNC 1
 #define SDL_VIDEO_DRIVER_X11_XTEST 1
 /* #undef SDL_VIDEO_DRIVER_QNX */
+/* #undef SDL_VIDEO_DRIVER_DOSVESA */
 
 /* #undef SDL_VIDEO_DRIVER_PRIVATE */
 
@@ -520,6 +524,7 @@
 /* #undef SDL_FILESYSTEM_PSP */
 /* #undef SDL_FILESYSTEM_PS2 */
 /* #undef SDL_FILESYSTEM_N3DS */
+/* #undef SDL_FILESYSTEM_DOS */
 
 /* #undef SDL_FILESYSTEM_PRIVATE */
 
@@ -620,6 +625,7 @@ typedef unsigned int uintptr_t;
 #define SDL_DISABLE_LSX 1
 #define SDL_DISABLE_LASX 1
 #define SDL_DISABLE_NEON 1
+#define SDL_DISABLE_SVE2 1
 
 #ifdef SDL_PLATFORM_PRIVATE
 #include "SDL_end_config_private.h"

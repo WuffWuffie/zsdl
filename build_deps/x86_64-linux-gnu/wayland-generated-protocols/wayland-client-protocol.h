@@ -3943,7 +3943,7 @@ wl_surface_destroy(struct wl_surface *wl_surface)
  *
  * Destroying the wl_buffer after wl_buffer.release does not change
  * the surface contents. Destroying the wl_buffer before wl_buffer.release
- * is allowed as long as the underlying buffer storage isn't reused (this
+ * is allowed as long as the underlying buffer storage isn't re-used (this
  * can happen e.g. on client process termination). However, if the client
  * destroys the wl_buffer before receiving the wl_buffer.release event and
  * mutates the underlying buffer storage, the surface contents become
@@ -4389,8 +4389,8 @@ struct wl_seat_listener {
 	 * sent once per seat object, and the name does not change over the
 	 * lifetime of the wl_seat global.
 	 *
-	 * Compositors may reuse the same seat name if the wl_seat global
-	 * is destroyed and recreated later.
+	 * Compositors may re-use the same seat name if the wl_seat global
+	 * is destroyed and re-created later.
 	 * @param name seat identifier
 	 * @since 2
 	 */
@@ -5975,9 +5975,9 @@ struct wl_output_listener {
 	 * event is only sent once per output object, and the name does not
 	 * change over the lifetime of the wl_output global.
 	 *
-	 * Compositors may reuse the same output name if the wl_output
-	 * global is destroyed and recreated later. Compositors should
-	 * avoid reusing the same name if possible.
+	 * Compositors may re-use the same output name if the wl_output
+	 * global is destroyed and re-created later. Compositors should
+	 * avoid re-using the same name if possible.
 	 *
 	 * The name event will be followed by a done event.
 	 * @param name output name
@@ -6510,7 +6510,7 @@ wl_fixes_destroy(struct wl_fixes *wl_fixes)
  *
  * The compositor will emit a wl_display.delete_id event with the object ID
  * of the registry and will no longer emit any events on the registry. The
- * client should reuse the object ID once it receives the
+ * client should re-use the object ID once it receives the
  * wl_display.delete_id event.
  */
 static inline void
